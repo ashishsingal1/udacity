@@ -32,7 +32,7 @@ class LearningAgent(Agent):
 
         # TODO: Learn policy based on state, action, reward
 
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        print ("LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward))  # [debug]
 
 
 def run():
