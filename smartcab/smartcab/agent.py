@@ -24,7 +24,7 @@ def init_qt():
     lights = ['red', 'green']
     traffic = ['forward', 'left', 'right', None]
     actions = [None, 'forward', 'right', 'left']
-    states = list(itertools.product(waypoints, lights, traffic, traffic, traffic))
+    states = list(itertools.product(waypoints, lights, traffic, traffic))
     for i in states: qt.update({(i, action): 0 for action in actions})
     return qt
 
@@ -51,20 +51,30 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        state = (self.next_waypoint, inputs['light'], inputs['oncoming'], inputs['left'], inputs['right'])
+        # first, set current to previous
+        if (not hasattr(self, 'state')): self.state = None
+        if (not hasattr(self, 'action')): self.action = None
+        if (not hasattr(self, 'reward')): self.reward = None
+        self.prev_state = self.state
+        self.prev_action = self.action
+        self.prev_reward = self.reward
+        # update current
+        self.state = (self.next_waypoint, inputs['light'], inputs['oncoming'], inputs['left'])
         
         # TODO: Select action according to your policy
         # action = random.choice(Environment.valid_actions) # step 1 - Implement a Basic Driving Agent
         # action = self.next_waypoint # step 2 - Inform the Driving Agent
-        action = get_action(self.qt, state, epsilon) # step 3 - Implement a Q-Learning Driving Agent
+        self.action = get_action(self.qt, self.state, epsilon) # step 3 - Implement a Q-Learning Driving Agent
 
         # Execute action and get reward
-        reward = self.env.act(self, action)
+        self.reward = self.env.act(self, self.action)
 
         # TODO: Learn policy based on state, action, reward
-        self.qt[(state, action)] = self.qt[(state, action)] + alpha * (reward + gamma * get_max(self.qt, state))
+        if (self.prev_state is not None): # not first step
+            self.qt[(self.prev_state, self.prev_action)] = (1-alpha) * self.qt[(self.prev_state, self.prev_action)] + alpha * \
+                (self.prev_reward + gamma * get_max(self.qt, self.state))
 
-        # print ("LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward))  # [debug]
+        # print ("LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, self.action, self.reward))  # [debug]
 
 
 def run():
@@ -82,7 +92,7 @@ def run():
 
     sim.run(n_trials=1000)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
-    # print(a.qt)
+    for i in a.qt.items(): print(str(i).replace('(','').replace(')',''))
 
 
 if __name__ == '__main__':
