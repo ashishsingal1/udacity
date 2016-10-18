@@ -7,7 +7,7 @@ import numpy as np
 
 # gets the appropriate action to perform
 def get_action(qt, state, epsilon = .2, actions = [None, 'forward', 'right', 'left']):
-    if (random.random() < .2): return random.choice(actions) # random action
+    if (random.random() < epsilon): return random.choice(actions) # random action
     else: # select max by greedy, random if tie
         np_array = np.array([qt[(state, action)] for action in actions]) # get q_values for this state
         idx = random.choice(list(np.where(np_array == np_array.max())[0])) # choose random action 
@@ -37,14 +37,18 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
         self.qt = init_qt()
+        self.reward_tracker = []
+        self.penalty_tracker = []
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
         # self.q_table = {}
+        self.reward_tracker.append(0)
+        self.penalty_tracker.append(0)
 
     def update(self, t):
-        alpha = .1; gamma = 0.8; epsilon = .2
+        alpha = .2; gamma = 0.8; epsilon = .1
         # Gather inputs
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
@@ -68,6 +72,8 @@ class LearningAgent(Agent):
 
         # Execute action and get reward
         self.reward = self.env.act(self, self.action)
+        self.reward_tracker[len(self.reward_tracker)-1] += self.reward
+        self.penalty_tracker[len(self.penalty_tracker)-1] += 1 if self.reward < 0 else 0
 
         # TODO: Learn policy based on state, action, reward
         if (self.prev_state is not None): # not first step
