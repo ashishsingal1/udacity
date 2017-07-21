@@ -1,4 +1,4 @@
-# udacity
+# Machine Learning Engineer Nanodegree
 
 Machine learning coursework from Udacity. Including ..
 
